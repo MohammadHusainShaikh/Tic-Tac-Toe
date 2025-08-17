@@ -1,6 +1,9 @@
+import java.util.Random;
+import java.util.Scanner;
+
 class TicTacToe
 {
-    char[][] board;
+    static char[][] board;
     
     public TicTacToe()
     {
@@ -15,7 +18,7 @@ class TicTacToe
             }
         }
     }
-    void displayBoard(){
+    static void displayBoard(){
             System.out.println("-------------");
            for(int i=0; i<board.length; i++){
             System.out.print("| ");
@@ -26,13 +29,13 @@ class TicTacToe
             System.out.println("-------------");
         }
     }
-    void placeMark(int row, int col, char mark){
+    static void placeMark(int row, int col, char mark){
         if(row >=0 && row <=2 && col >=0 && col <=2)
             board[row][col] = mark;
         else
             System.out.println("Invalid Position");
     }
-     boolean checkColWin(){
+    static boolean checkColWin(){
         for(int j=0; j<=2; j++){
             if(board[0][j] != ' ' && board[0][j] == board[1][j] && board[1][j] == board[2][j]){
                 return true;
@@ -40,8 +43,8 @@ class TicTacToe
      }
         return false;  
     }
-    boolean checkRowWin(){
-        //1direct chack by tracking index
+    static boolean checkRowWin(){
+        //1 direct chack by tracking index
         // if(board[0][0] == board[0][1] && board[0][1] == board[0][2] ||
         //         board[1][0] == board[1][1] && board[1][1] == board[1][2]||
         //         board[2][0] == board[2][1] && board[2][1] == board[2][2]){
@@ -56,7 +59,7 @@ class TicTacToe
         }
         return false;
     }
-    boolean checkDiagWin(){
+    static boolean checkDiagWin(){
         // board[0][0] != ' ' && is for that it not shpuld be empty becaous if it is
         // all (row, col. diag) empty then it will sow true to avoid we check this first
         if(board[0][0] != ' ' && board[0][0] == board[1][1]
@@ -68,27 +71,135 @@ class TicTacToe
             return false;
            }
     }
+    static boolean isDraw(){
+        for(int i =0; i<board.length; i++){
+            for(int j =0; j<board[i].length; j++){
+                if(board[i][j] == ' '){
+                    return false; // if any cell is empty, it's not a draw  
+                }
+            }
+        }
+        return true; // if all cells are filled, it's a draw
+    }
 }
+abstract class Player{
+    String name;
+    char mark;
+    
+    abstract void makeMove();
+
+    boolean isValidMove(int row, int col){
+        if(row >= 0 && row <= 2 && 
+               col >=0 && col <= 2){
+            if(TicTacToe.board[row][col] == ' '){
+                return true;
+            } else {
+                System.out.println("Position already occupied.");
+                return false;
+            }
+        }
+        return false;
+    }
+
+}
+class HumanPlayer extends Player
+{
+    // HumanPlayer is a subclass of Player
+    // It inherits the properties and methods of Player
+
+    public HumanPlayer(String name, char mark) {
+        this.name = name;
+        this.mark = mark;
+    }
+
+    void makeMove() {
+        int row;
+        int col;
+       Scanner scan = new Scanner(System.in);
+       
+       do {
+            System.out.println(name + ", enter your move (row and column): ");
+            row = scan.nextInt();
+            col = scan.nextInt();
+        } while (!isValidMove(row, col));
+        // Place the mark on the board
+        TicTacToe.placeMark(row, col, mark);
+        System.out.println(name + " placed " + mark + " at (" + row + ", " + col + ")");
+
+        
+    }
+}
+class AIPlayer extends Player{
+
+
+    public AIPlayer(String name, char mark) {
+        this.name = name;
+        this.mark = mark;
+    }
+
+    void makeMove() {
+        int row;
+        int col;
+       Scanner scan = new Scanner(System.in);
+       do{
+         Random r = new Random();
+         row = r.nextInt(3);
+         col = r.nextInt(3);
+       }while (!isValidMove(row, col));
+        // Place the mark on the board
+        TicTacToe.placeMark(row, col, mark);
+        System.out.println(name + " placed " + mark + " at (" + row + ", " + col + ")");
+
+        
+    }
+}
+
+
+
 public class LaunchGame {
     public static void main(String[] args) {
         TicTacToe t = new TicTacToe();
-        t.displayBoard();
-        
-        t.placeMark(0, 2, 'X');
-        t.placeMark(0, 1, 'O');
-        t.placeMark(2, 2, 'X');
-        t.placeMark(1, 1, 'X');
-        t.placeMark(2, 1, 'O');
-        t.placeMark(1, 2, 'X');
-        t.placeMark(0, 0, 'O');
-        t.placeMark(2, 0, 'X');
-        t.placeMark(1, 0, 'O');
-        
+        //new HumanPlayer("Priyenka", 'O').makeMove(); // by anonymous object
+        HumanPlayer h1 = new HumanPlayer("Husain", 'X');
+        AIPlayer Ai = new AIPlayer("robo", 'O');
+        Player cp ;
+        cp = h1;
 
-        t.displayBoard();
-        System.out.println(t.checkColWin());
-        System.out.println(t.checkRowWin());
-        System.out.println(t.checkDiagWin());
+        while (true) {
+           System.out.println("Current Player turn: " + cp.name + " with mark: " + cp.mark);
+        cp.makeMove();
+        TicTacToe.displayBoard();
+        if (TicTacToe.checkColWin() || TicTacToe.checkRowWin() || TicTacToe.checkDiagWin()) {
+            TicTacToe.displayBoard();
+            System.out.println("Game Over! " + cp.name + " wins!"); 
+            break;           
+        }else if(TicTacToe.isDraw()){
+          TicTacToe.displayBoard();
+          System.out.println("Game Over! It's a draw!");
+          break;
+        }else{
+          cp = (cp == h1) ? Ai : h1;
+        }
+    }
+
+        // for(int i=0; i<9; i++){
+        //     TicTacToe.displayBoard();
+        //     if(i % 2 == 0){
+        //         h1.makeMove();
+        //     } else {
+        //         Ai.makeMove();
+        //     }
+        //     if(TicTacToe.checkRowWin() || TicTacToe.checkColWin() || TicTacToe.checkDiagWin()){
+        //         TicTacToe.displayBoard();
+        //         System.out.println("Game Over! " + (i % 2 == 0 ? h1.name : Ai.name) + " wins!");
+        //         return;
+        //     }else if(TicTacToe.isDraw()){
+        //             TicTacToe.displayBoard();
+        //             System.out.println("Game Over! It's a draw!");
+        //             return;
+        //         }  
+            
+        // }
     }
 }
  
